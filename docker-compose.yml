@@ -1,0 +1,55 @@
+version: '3.12'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app_container
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_DB: fastapiposts
+      POSTGRES_USER: easyuser
+      POSTGRES_PASSWORD: 1234
+      DATABASE_URL: postgres://easyuser:1234@db:5432/db_container
+    networks:
+      - app-network
+
+  db:
+    image: postgres:16
+    container_name: db_container
+    environment:
+      POSTGRES_DB: fastapiposts
+      POSTGRES_USER: easyuser
+      POSTGRES_PASSWORD: 1234
+      PGHOST: db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    command: sh -c "sleep 30 && /entrypoint.sh"
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
